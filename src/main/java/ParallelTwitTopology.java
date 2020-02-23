@@ -11,22 +11,19 @@ public class ParallelTwitTopology extends ConfigurableTopology {
     @Override
     protected int run(String[] args) throws Exception {
         TopologyBuilder builder = new TopologyBuilder();
+        conf.setDebug(true);
+        conf.setNumWorkers(4);
         builder.setSpout("tweets", new TwitSpout());
         builder.setBolt("hashTags", new GetHashTagBolt())
                 .shuffleGrouping("tweets");
-        builder.setBolt("counts", new LossyCountingBolt(), 4)
-                .setNumTasks(8).fieldsGrouping("hashTags", new Fields("hashTag"));
+        builder.setBolt("counts",
+                new LossyCountingBolt(Double.parseDouble(args[2]), Double.parseDouble(args[3])), 4)
+                .fieldsGrouping("hashTags", new Fields("hashTag"));
         builder.setBolt("log", new LogBolt(args[1]))
                 .globalGrouping("counts");
-        conf.setDebug(true);
 
-        String topologyName = "Parallel Count";
 
-        if (args != null && args.length > 0) {
-            topologyName = args[0];
-        }
-
-        return submit(topologyName, conf, builder);
+        return submit(args[0], conf, builder);
 
     }
 }

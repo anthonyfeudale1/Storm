@@ -65,7 +65,7 @@ public class CountingBolt extends BaseRichBolt {
         list.sort(new Comparator<Map.Entry<String, Integer>>() {
             public int compare(Map.Entry<String, Integer> o1,
                                Map.Entry<String, Integer> o2) {
-                return (o1.getValue()).compareTo(o2.getValue());
+                return -1* (o1.getValue()).compareTo(o2.getValue());
             }
         });
 
