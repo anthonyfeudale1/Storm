@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class LossyCountingBolt extends BaseRichBolt {
+public class ParallelLossyCountingBolt extends BaseRichBolt {
     OutputCollector _collector;
     private ConcurrentHashMap<String, HashTagEntry> counts = new ConcurrentHashMap<String, HashTagEntry>();
     static long startTime;
@@ -24,7 +24,7 @@ public class LossyCountingBolt extends BaseRichBolt {
     int numberOfElements = 0;
 
 
-    public LossyCountingBolt(double _epsilon, double _s) {
+    public ParallelLossyCountingBolt(double _epsilon, double _s) {
         epsilon = _epsilon;
         s = _s;
         width = (int) Math.ceil(1 / epsilon);
@@ -67,9 +67,9 @@ public class LossyCountingBolt extends BaseRichBolt {
                     }
                     StringBuilder topTags = new StringBuilder("");
                     for (Map.Entry<String, HashTagEntry> entry : sortedCounts) {
-                        topTags.append("#").append(entry.getKey());
+                        topTags.append(entry.getKey()).append(",").append(entry.getValue().frequency).append(" ");
                     }
-                    _collector.emit(tuple, new Values(topTags.toString(), currentTime));
+                    _collector.emit(tuple, new Values(topTags.toString().trim()));
                     _collector.ack(tuple);
                 }
             }
@@ -100,7 +100,7 @@ public class LossyCountingBolt extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("topTags", "time"));
+        declarer.declare(new Fields("topTags"));
     }
 
     public static List<Map.Entry<String, HashTagEntry>> sortByValue(ConcurrentHashMap<String, HashTagEntry> hm) {
@@ -119,5 +119,3 @@ public class LossyCountingBolt extends BaseRichBolt {
     }
 
 }
-
-

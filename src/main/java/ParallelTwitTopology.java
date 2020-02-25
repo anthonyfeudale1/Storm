@@ -14,13 +14,16 @@ public class ParallelTwitTopology extends ConfigurableTopology {
         conf.setDebug(true);
         conf.setNumWorkers(4);
         builder.setSpout("tweets", new TwitSpout());
-        builder.setBolt("hashTags", new GetHashTagBolt())
+        builder.setBolt("hashTags", new GetHashTagBolt(), 4)
                 .shuffleGrouping("tweets");
         builder.setBolt("counts",
-                new LossyCountingBolt(Double.parseDouble(args[2]), Double.parseDouble(args[3])), 4)
+                new ParallelLossyCountingBolt(Double.parseDouble(args[2]), Double.parseDouble(args[3])), 4)
                 .fieldsGrouping("hashTags", new Fields("hashTag"));
-        builder.setBolt("log", new LogBolt(args[1]))
+        builder.setBolt("aggregateCounts",
+                new AggregateBolt())
                 .globalGrouping("counts");
+        builder.setBolt("log", new LogBolt(args[1]))
+                .globalGrouping("aggregateCounts");
 
 
         return submit(args[0], conf, builder);

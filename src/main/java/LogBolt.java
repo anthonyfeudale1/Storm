@@ -14,9 +14,14 @@ import java.util.Map;
 public class LogBolt extends BaseRichBolt {
     OutputCollector _collector;
     String outputPath;
+    static long startTime;
 
     public LogBolt(String _outputPath) {
         this.outputPath = _outputPath;
+        startTime = System.currentTimeMillis();
+    }
+    public LogBolt(boolean isParallel) {
+
     }
 
     @Override
@@ -42,6 +47,6 @@ public class LogBolt extends BaseRichBolt {
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("word"));
+        declarer.declare(new Fields("log"));
     }
 }

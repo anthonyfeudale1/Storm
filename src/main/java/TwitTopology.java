@@ -13,7 +13,7 @@ public class TwitTopology extends ConfigurableTopology {
         builder.setSpout("tweets", new TwitSpout());
         builder.setBolt("hashTags", new GetHashTagBolt())
                 .shuffleGrouping("tweets");
-        builder.setBolt("counts", new CountingBolt())
+        builder.setBolt("counts", new LossyCountingBolt(Double.parseDouble(args[2]), Double.parseDouble(args[3])))
                 .globalGrouping("hashTags");
         builder.setBolt("log", new LogBolt(args[1]))
                 .globalGrouping("counts");
