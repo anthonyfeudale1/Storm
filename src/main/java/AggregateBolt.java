@@ -15,9 +15,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AggregateBolt extends BaseRichBolt {
     OutputCollector _collector;
-    private ConcurrentHashMap<String, Integer> counts = new ConcurrentHashMap<String, Integer>();
-    static long startTime;
 
+    static long startTime;
+    ConcurrentHashMap<String, LinkedList<Pair<String, Integer>>> topFromSource = new ConcurrentHashMap<String, LinkedList<Pair<String, Integer>>>();
 
 
     @Override
@@ -32,19 +32,26 @@ public class AggregateBolt extends BaseRichBolt {
 
         String topTagsString = tuple.getStringByField("topTags");
         LinkedList<Pair<String, Integer>> topTags = processTopTags(topTagsString);
-        for(Pair<String, Integer> currentHashTag : topTags) {
-            if (counts.containsKey(currentHashTag.getKey())) {
-                int newFreq = counts.get(currentHashTag.getKey()) + currentHashTag.getValue();
-                counts.put(currentHashTag.getKey(), newFreq );
-            } else {
-                counts.put(currentHashTag.getKey(), currentHashTag.getValue() );
-            }
-        }
+        topFromSource.put(tuple.getSourceComponent(), topTags);
+
 
 
         long currentTime = System.currentTimeMillis();
         if (currentTime >= startTime + 10000) {
             startTime = currentTime;
+            ConcurrentHashMap<String, Integer> counts = new ConcurrentHashMap<String, Integer>();
+            for (String key : topFromSource.keySet()) {
+                LinkedList<Pair<String, Integer>> keyTopTags = topFromSource.get(key);
+                for(Pair<String, Integer> currentHashTag : keyTopTags) {
+                    if (counts.containsKey(currentHashTag.getKey())) {
+                        int newFreq = counts.get(currentHashTag.getKey()) + currentHashTag.getValue();
+                        counts.put(currentHashTag.getKey(), newFreq );
+                    } else {
+                        counts.put(currentHashTag.getKey(), currentHashTag.getValue() );
+                    }
+                }
+            }
+
             if (! counts.isEmpty()) {
                 List<Map.Entry<String, Integer>> sortedCounts = sortByValue(counts);
 
