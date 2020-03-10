@@ -54,7 +54,7 @@ public class TwitSpout extends BaseRichSpout {
         twitterStream.setOAuthConsumer(consumerKey, consumerSecret);
         AccessToken token = new AccessToken(accessToken, accessTokenSecret);
         twitterStream.setOAuthAccessToken(token);
-        twitterStream.sample();
+        twitterStream.sample("en");
     }
 
     @Override
